@@ -14,26 +14,30 @@ import android.widget.ImageView;
 public class ShadowImageView extends ImageView {
 
     private static Paint paintShadow;
+    private static Paint paintBackground;
+    private static Paint paintBitmap;
+
     private boolean disableRandomRotation;
 
     public ShadowImageView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        paintShadow = new Paint();
+        paintShadow     = new Paint();
+        paintBackground = new Paint();
+        paintBitmap     = new Paint();
 
-        setLayerType(LAYER_TYPE_HARDWARE, paintShadow);
+        setLayerType(LAYER_TYPE_SOFTWARE, null);
 
-        paintShadow.setColor(Color.GRAY);
-        paintShadow.setStyle(Paint.Style.STROKE);
+        paintShadow.setColor(Color.WHITE);
+        paintShadow.setShadowLayer(1.5f, 2.0f, 2.0f, Color.GRAY);
         paintShadow.setAntiAlias(true);
-        paintShadow.setDither(true);
-        paintShadow.setStrokeWidth(3);
 
-        // TODO: android does not support LAYER_TYPE_HARDWARE and setShadowLayer()
-        // TODO: http://developer.android.com/guide/topics/graphics/hardware-accel.html#unsupported
+        paintBackground.setColor(Color.WHITE);
+        paintBackground.setStyle(Paint.Style.FILL);
+        paintBackground.setAntiAlias(true);
 
-        // paintShadow.setShadowLayer(4.0f, 0.0f, 0.0f, Color.BLACK);
-
+        paintBitmap.setFilterBitmap(true);
+        paintBitmap.setAntiAlias(true);
     }
 
     public void setRandomRotationDisabled()
@@ -63,15 +67,24 @@ public class ShadowImageView extends ImageView {
             return;
         }
 
+        canvas.save();
+
         if(disableRandomRotation){
-            setRotation(2);
+            canvas.rotate(2);
         } else {
-            setRotation(getRandomRotation());
+            canvas.rotate(getRandomRotation());
         }
+
         Bitmap bitmap = ((BitmapDrawable)drawable).getBitmap();
-        canvas.drawLine(0, getHeight()-1, getWidth(), getHeight()-1, paintShadow);
-        canvas.drawLine(getWidth()-1, 0, getWidth()-1, getHeight(), paintShadow);
-        Rect dst = getRectForSize(8, 8, getWidth()-8, getHeight()-8);
-        canvas.drawBitmap(bitmap, null, dst, null);
+
+        Rect background         = getRectForSize(14, 14, getWidth()-14, getHeight()-14);
+        Rect imageContainer     = getRectForSize(20, 20, getWidth()-20, getHeight()-20);
+        Rect backgroundShadow   = getRectForSize(10, 10, getWidth()-10, getHeight()-10);
+
+        canvas.drawRect(background, paintBackground);
+        canvas.drawRect(backgroundShadow, paintShadow);
+        canvas.drawBitmap(bitmap, null, imageContainer, paintBitmap);
+
+        canvas.restore();
     }
 }
